@@ -18,6 +18,7 @@ to the human engineer as consolidated results.
 | Product code changes | **Code Panel** | Bug fixes, feature code, refactoring, containment |
 | Test code changes | **Code Panel** | Unit tests, characterization tests, test infrastructure |
 | Design & architecture | **Design Panel** | Design docs, architecture decisions, API shape, component structure |
+| Implementation plans | **Design Panel** | Plan mode plans, multi-step task breakdowns, approach proposals |
 | Written artifacts | **Writing Panel** | Commit messages, PR titles/descriptions, review comments, specs, documents |
 
 When an artifact spans types (e.g., a PR with code changes AND a description),

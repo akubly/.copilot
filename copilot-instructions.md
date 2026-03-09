@@ -121,9 +121,20 @@ Two gates govern all work. They are learning mechanisms, not just safety mechani
 
 ### Pre-Output Persona Review Gate
 
-**When:** Before presenting any deliverable artifact — code changes, analysis, recommendations, PR descriptions, bug reports, architectural proposals.
+**When:** Before presenting any deliverable artifact — code changes, plans,
+analysis, recommendations, PR descriptions, bug reports, architectural proposals.
 
 **Action:** Invoke the `persona-review` skill. Full panel always — no shortcuts.
+
+**Proportionality:** For trivial changes (typos, single-line fixes, simple
+renames), a lightweight self-review suffices. Reserve the full panel for
+substantive artifacts.
+
+**Plan mode hook:** When in plan mode, run the Design Panel on the plan before
+calling `exit_plan_mode`. If the review produces important or blocking findings,
+present them via `ask_user` as discussion points — these become the natural
+conversation before plan approval. If only minor findings, incorporate silently
+and proceed to `exit_plan_mode`.
 
 **References:**
 - Skill definition: `~/.copilot/skills/persona-review/SKILL.md`
