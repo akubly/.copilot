@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "powershell": "hooks/tool-guards/guard.ps1",
+        "cwd": ".",
+        "timeoutSec": 5,
+        "comment": "Blocks unblessed git commits/pushes and recursive file operations in VFS repos"
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "userPromptSubmitted": [
+      {
+        "type": "command",
+        "powershell": "hooks/prompt-audit/audit-prompt.ps1",
+        "cwd": ".",
+        "timeoutSec": 5,
+        "comment": "Logs user prompts to sidecar JSONL for session-summary enrichment"
+      }
+    ]
+  }
+}

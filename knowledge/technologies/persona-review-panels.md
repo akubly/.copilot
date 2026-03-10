@@ -1,5 +1,9 @@
 # Technology: Persona Review Panels
 
+*Created: 2026-03-08*
+*Revised: 2026-03-09 — consolidated from 12 focused personas to 4 core + rotating model*
+*Source: AIGuidelines review + working history analysis + panel design discussion*
+
 ## Purpose
 
 Defines work-type-specific persona panels for the mandatory pre-output review
@@ -10,6 +14,11 @@ gate. Each panel uses a **core + rotating** model:
 
 Personas run in parallel. Findings are merged, deduplicated, and presented
 to the human engineer as consolidated results.
+
+## Cross-referenced from
+- `knowledge/concepts/ai-assisted-engineering.md` — principles and trust spectrum
+- `skills/persona-review/SKILL.md` — workflow that invokes these panels
+- `copilot-instructions.md` — mandatory gate rules
 
 ## Panel Selection
 
@@ -53,12 +62,12 @@ original focused reviewers it absorbed.
 **Tuning — what this persona must evaluate:**
 - **Logic:** Control flow errors, edge cases, off-by-one, null/empty handling,
   incorrect boolean logic, wrong operator, incorrect state transitions
-- **Error handling:** All failure paths handled? Errors propagated correctly?
-  Resources cleaned up on every exit path (including early returns and
+- **Error handling:** All failure paths handled? HRESULTs propagated with WIL
+  macros? Resources cleaned up on every exit path (including early returns and
   exceptions)?
 - **Resource management:** RAII compliance — no raw `new`/`delete`, no manual
   resource lifetime management. Handle leaks, dangling pointers, double-free.
-  Smart pointers for owned memory, RAII wrappers for platform resources.
+  `wil::unique_*` for Windows resources, `std::unique_ptr` for owned memory.
 - **Concurrency:** Races, deadlocks, lock ordering violations, TOCTOU. Atomics
   used correctly? Lock scope appropriate? Shared state properly protected?
 - **Performance:** Allocations on hot paths, algorithmic complexity, unnecessary
@@ -72,7 +81,8 @@ original focused reviewers it absorbed.
 - Under concurrent access, could this produce torn reads, races, or deadlocks?
 - Could this cause measurable performance degradation?
 
-Grounded in: real-world experience with fix scoping — tracing all side effects before committing to a change. Informed by incidents where removing a guard re-enabled unintended downstream paths.
+**Grounded in:** Fix-scoping concept ("first thought might be wrong" — trace all
+side effects). Bug #60670724: removing a guard re-enabled ALL downstream paths.
 
 #### Skeptic
 **Lens:** What could go wrong that isn't obvious?
@@ -92,13 +102,14 @@ Grounded in: real-world experience with fix scoping — tracing all side effects
   a simpler or more robust alternative not considered?
 
 **Key questions:**
-- Would the diff show any surprises?
+- Would `git diff` show any surprises?
 - What assumptions does this code make that aren't guaranteed?
 - If this function's behavior changes, what breaks downstream?
 - Is this the approach the codebase ecosystem expects?
 - What's the simplest alternative that would also work?
 
-Grounded in: real-world experience with scope creep, hidden dependencies, and review feedback patterns. Informed by incidents involving undocumented toolchain behavior, ecosystem mismatches, and solving the wrong problem first.
+**Grounded in:** Sub-agent 41-feature removal (scope), `__imp_` anti-pattern
+(hidden cost), gvfs vs scalar (ecosystem fit), PCH boundary (wrong problem first).
 
 #### Craft
 **Lens:** Is this good code?
@@ -123,23 +134,25 @@ Grounded in: real-world experience with scope creep, hidden dependencies, and re
 - If this breaks in production, can we diagnose it from logs/telemetry alone?
 - Does this follow the component's existing patterns and conventions?
 
-Grounded in: real-world PR review patterns emphasizing observability, naming conventions, and testability. Informed by the principle that code which can't be tested can't be safely changed.
+**Grounded in:** Aaron's PR review patterns: emphasis on observability/tracing,
+naming conventions, testability. Characterization testing concept: code that
+can't be tested can't be safely changed.
 
 #### Compliance
 **Lens:** Did we follow the rules?
 
 **Tuning — what this persona must evaluate:**
-- **Containment:** Is the change behind a feature flag? Is the old code path
-  preserved exactly in the fallback branch? No mixed feature-flag + business
-  logic conditions? Correct feature flag configuration? Assertions in new types?
+- **Containment:** Is the change behind a Velocity feature flag? Is the old
+  code path preserved exactly in the else branch? No mixed velocity + business
+  logic conditions? Correct feature staging XML? `AssertEnabled()` in new types?
 - **Testing evidence:** Were unit/functional/regression tests run? Are results
   available? Does test coverage include the changed code paths?
-- **Authorship quality:** Has the author demonstrated understanding (not
+- **AIGuidelines adherence:** Has the author demonstrated understanding (not
   just AI generation)? Are claims validated with evidence? Is the security/perf
   analysis documented (even briefly)?
-- **Coding standards:** Annotations on pointer parameters? RAII for
-  resources? Modern language features where appropriate? Team-specific
-  conventions followed?
+- **Coding standards:** SAL annotations on pointer parameters? RAII for
+  resources? C++17 features where appropriate? Team-specific conventions
+  (e.g., Omega pointer prefixes)?
 
 **Key questions:**
 - Is every behavioral change properly contained behind a feature flag?
@@ -147,7 +160,9 @@ Grounded in: real-world PR review patterns emphasizing observability, naming con
 - Does the author demonstrate understanding of what the code does and why?
 - Does the code follow the applicable coding standards?
 
-Grounded in: real-world containment discipline — contain everything, even obvious null checks. Informed by AI-assisted engineering guidelines requiring reviewed implementation, testing, and understood implications.
+**Grounded in:** Containment concept ("contain EVERYTHING, even obvious NULL
+checks"). AIGuidelines: "reviewed full implementation, performed testing,
+understood security/performance implications."
 
 ### Rotating Personas
 
@@ -168,10 +183,11 @@ structure, changes API surface, or crosses component boundaries.
 (hard to misuse?), backward compatibility, dependency management, layering.
 
 #### Platform
-**Include when:** Change involves architecture-specific code (e.g., ARM64/x86),
-cross-platform behavior, or build system changes.
+**Include when:** Change involves architecture-specific code (ARM64/x86),
+cross-SKU behavior (Server/Client), build system changes (`sources` files,
+`dirs` files, `project.mk`).
 
-**Focus:** Architecture conditionals correct? Build flags right? Platform-specific
+**Focus:** Architecture conditionals correct? Build flags right? Server SKU
 behavior preserved? Cross-architecture test coverage?
 
 ---
@@ -201,7 +217,8 @@ behavior preserved? Cross-architecture test coverage?
 - Does this pattern exist elsewhere in the codebase, and if not, why not?
 - Can this be implemented incrementally, or is it all-or-nothing?
 
-Grounded in: real-world design evolution experience where multiple flawed designs were identified and rejected through review before the right approach emerged. Informed by root-cause analysis discipline — tracing failure chains to their origin.
+**Grounded in:** WITL 4-design evolution (3 flawed designs killed by review
+before the right one emerged). Root-cause-analysis concept (trace failure chains).
 
 #### Skeptic
 **Lens:** What's not obvious about this design?
@@ -222,7 +239,9 @@ Grounded in: real-world design evolution experience where multiple flawed design
 - What's the simplest alternative that was considered and rejected — and why?
 - What would the designer say is the biggest risk, and do I agree?
 
-Grounded in: real-world experience with hidden dependencies, ecosystem mismatches, and solving problems in the wrong order. Informed by incidents where zero product code changes still introduced subtle breakage through toolchain or infrastructure assumptions.
+**Grounded in:** `__imp_` anti-pattern (zero product code changes but MSVC
+linker dependency). gvfs vs scalar (modern ≠ correct for the ecosystem).
+PCH boundary (right solution, wrong order).
 
 #### Pragmatist
 **Lens:** Is this the right approach?
@@ -243,7 +262,9 @@ Grounded in: real-world experience with hidden dependencies, ecosystem mismatche
 - How do we deploy this without breaking what's already working?
 - What does operating this look like on a bad day?
 
-Grounded in: real-world experience with execution ordering mistakes — optimizing the wrong thing first. Informed by incremental validation discipline where each phase is validated before proceeding to the next.
+**Grounded in:** PCH boundary lesson (optimized the wrong thing first — execution
+order matters). Characterization testing 3-phase discipline (incremental, each
+phase validated before proceeding).
 
 #### Compliance
 **Lens:** Did we follow the process?
@@ -255,7 +276,7 @@ Grounded in: real-world experience with execution ordering mistakes — optimizi
   Tradeoffs stated?
 - **Threat modeling:** Has security threat modeling been performed for the
   design? Attack surface identified?
-- **Authorship quality:** Does the design demonstrate author understanding, not
+- **AIGuidelines:** Does the design demonstrate author understanding, not
   just AI fluency?
 
 **Key questions:**
@@ -264,7 +285,8 @@ Grounded in: real-world experience with execution ordering mistakes — optimizi
 - Has a security threat model been performed?
 - Could an engineer unfamiliar with AI reproduce the reasoning?
 
-Grounded in: AI-assisted engineering guidelines requiring explored alternatives, challenged assumptions, and validated claims with attached references.
+**Grounded in:** AIGuidelines: "explored alternatives and challenged AI on
+potential failures," "validated all claims and attached references."
 
 ### Rotating Personas
 
@@ -308,7 +330,9 @@ latency requirements, throughput modeling.
 - What would a reader need to know that isn't written here?
 - Are limitations and risks acknowledged, or only benefits?
 
-Grounded in: real-world experience with confident-looking AI-generated results that were factually wrong. Informed by the principle that AI content can be fluent, internally consistent, and completely incorrect with no error signal.
+**Grounded in:** "3 PDBs, 3 answers" — confident-looking results that were
+completely wrong. AI-generated content can be fluent, internally consistent,
+and factually wrong with no error signal.
 
 #### Clarity & Voice
 **Lens:** Is this clear, and does it sound right?
@@ -322,8 +346,9 @@ Grounded in: real-world experience with confident-looking AI-generated results t
   on a multi-day rabbit hole investigation? (nit, Non-blocking, Food for
   thought — not for this PR)
 - **Actionability:** Does the reader know what to do after reading this?
-- **Voice match** (when writing on someone's behalf): Economy of words? Questions
-  as primary tool? Appropriate suggestion verbs? No corporate-speak?
+- **Voice match** (when writing on Aaron's behalf): Economy of words? Questions
+  as primary tool? "Consider" as suggestion verb? Appropriate humor? No
+  corporate-speak? Load `pr-review-voice.md` before evaluating.
 
 **Key questions:**
 - Could any statement send someone on a multi-day investigation?
@@ -331,11 +356,12 @@ Grounded in: real-world experience with confident-looking AI-generated results t
 - Is it as short as it can be while still being clear?
 - Would a question work better than a statement?
 
-**Note:** Voice matching applies when writing on someone's behalf (PR content,
+**Note:** Voice matching applies when writing on Aaron's behalf (PR content,
 review comments, commit messages, thread replies). For internal working
 documents, evaluate clarity without voice matching.
 
-Grounded in: real-world analysis of review comment patterns and PR writing. Informed by scope labeling discipline — unlabeled comments cause rabbit holes.
+**Grounded in:** Voice guide (193 review comments, 19 PRs analyzed). Scope
+labeling discipline: unlabeled comments cause rabbit holes.
 
 #### Pragmatist
 **Lens:** Is this the right scope and framing?
@@ -356,7 +382,8 @@ Grounded in: real-world analysis of review comment patterns and PR writing. Info
 - Is this pitched at the right level for its audience?
 - Does this conflict with anything we've previously committed to?
 
-Grounded in: real-world experience with practical implementability assessments and overhead-vs-value tradeoffs in review processes.
+**Grounded in:** Pragmatist persona from AIGuidelines review — practical
+implementability, overhead vs. value tradeoffs.
 
 #### Compliance
 **Lens:** Did we follow the process?
@@ -366,7 +393,7 @@ Grounded in: real-world experience with practical implementability assessments a
   the text demonstrate author understanding or just AI fluency?
 - **References:** Are factual claims backed by independently locatable
   authoritative sources? Not AI-generated summaries or fabricated citations?
-- **Authorship quality:** Does the writing demonstrate that the author
+- **AIGuidelines adherence:** Does the writing demonstrate that the author
   explored alternatives, challenged AI, and understood tradeoffs?
 - **Appropriate attribution:** When citing sources, specs, or data — are
   attributions accurate and verifiable?
@@ -376,7 +403,8 @@ Grounded in: real-world experience with practical implementability assessments a
 - Are references independently verifiable?
 - Would this pass scrutiny if someone asked "how do you know this?"
 
-Grounded in: AI-assisted engineering guidelines requiring validated claims, attached references, and demonstrated understanding of pros and cons.
+**Grounded in:** AIGuidelines: "author must have validated all claims and
+attached references," "good understanding of Pros/Cons."
 
 ### Rotating Personas
 
@@ -391,8 +419,8 @@ priorities and concerns.
 
 ## Shared Prompt Template
 
-Each persona receives this structure when invoked by the persona-review workflow.
-**This is the single source of truth** — the workflow references this template
+Each persona receives this structure when invoked by the persona-review skill.
+**This is the single source of truth** — the skill references this template
 rather than duplicating it.
 
 ```
@@ -435,4 +463,5 @@ These panels are a starting point. Track feedback:
 - Do any rotating personas deserve promotion to core?
 - Do any core personas consistently produce low-value findings?
 
-Update this file based on real usage data.
+Update this file based on real usage data. Record significant learnings in
+`knowledge/concepts/ai-assisted-engineering.md` and diary entries.

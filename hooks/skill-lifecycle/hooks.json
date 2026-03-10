@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "hooks/skill-lifecycle/init.sh",
+        "powershell": "hooks/skill-lifecycle/init.ps1",
+        "cwd": ".",
+        "timeoutSec": 5
+      }
+    ],
+    "sessionEnd": [
+      {
+        "type": "command",
+        "bash": "hooks/skill-lifecycle/summary.sh",
+        "powershell": "hooks/skill-lifecycle/summary.ps1",
+        "cwd": ".",
+        "timeoutSec": 5
+      }
+    ]
+  }
+}

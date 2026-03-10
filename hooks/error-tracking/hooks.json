@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "errorOccurred": [
+      {
+        "type": "command",
+        "powershell": "hooks/error-tracking/errors.ps1",
+        "cwd": ".",
+        "timeoutSec": 5,
+        "comment": "Logs agent errors to sidecar JSONL file for post-session analysis"
+      }
+    ]
+  }
+}

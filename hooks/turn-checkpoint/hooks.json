@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "agentStop": [
+      {
+        "type": "command",
+        "powershell": "hooks/turn-checkpoint/checkpoint.ps1",
+        "cwd": ".",
+        "timeoutSec": 5,
+        "comment": "Per-turn checkpoint: detects unbuilt source changes and missing containment"
+      }
+    ]
+  }
+}

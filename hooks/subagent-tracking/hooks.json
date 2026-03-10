@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "subagentStop": [
+      {
+        "type": "command",
+        "powershell": "hooks/subagent-tracking/track-subagent.ps1",
+        "cwd": ".",
+        "timeoutSec": 5,
+        "comment": "Logs subagent completions for utilization analysis"
+      }
+    ]
+  }
+}

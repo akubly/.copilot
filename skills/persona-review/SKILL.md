@@ -3,7 +3,7 @@ name: persona-review
 description: Review any work artifact through a work-type-specific persona panel before it leaves the machine. Findings are discussed item by item with the human engineer.
 requires:
   concepts: [ai-assisted-engineering]
-  technologies: [persona-review-panels, review-voice]
+  technologies: [persona-review-panels, pr-review-voice]
 ---
 
 Use this skill when:
@@ -35,8 +35,8 @@ validates; the agent helps them do it efficiently.
 
 **Mechanical validations** (running tests, executing builds, checking
 references) **can and should be performed by the agent** when capable.
-The results must be presented in a **verifiable** way — test logs
-available locally, CI/CD test pass URLs, build output files, linked
+The results must be presented in a **verifiable** way — WEX logs
+available locally, lab/cloud test pass URLs, build output files, linked
 references the human can open. The agent asserts with evidence, not
 just claims. The human spot-checks the evidence rather than re-running
 everything.
@@ -55,7 +55,7 @@ everything.
   trust spectrum, human accountability, anti-patterns
 - **`knowledge/technologies/persona-review-panels.md`** — Panel definitions,
   persona focus areas, shared prompt template
-- **`knowledge/technologies/review-voice.md`** — Required by Voice Reviewer
+- **`knowledge/technologies/pr-review-voice.md`** — Required by Voice Reviewer
   persona (writing panel only)
 
 ## Workflow
@@ -117,7 +117,7 @@ Each persona receives:
 
 **All personas run in parallel** — this is critical for keeping the review
 fast and minimizing the impatience/skip pressure identified in our
-engineering principles (review as a value-add, not a bottleneck).
+AIGuidelines review (Finding 9).
 
 **Prompt structure for each persona:**
 
@@ -182,7 +182,7 @@ For each finding, include:
   check, a code path to trace. **When the agent can perform mechanical
   validation itself** (run tests, check references, execute builds), it
   should do so and present the results with verifiable evidence (local
-  test logs, CI/CD test pass URLs, build output files, clickable reference
+  WEX logs, lab test pass URLs, build output files, clickable reference
   links). The human spot-checks evidence rather than re-running.
 
 **After presenting each finding, wait for the human's disposition:**
@@ -224,9 +224,9 @@ Only after the review is marked complete may the artifact proceed:
 ## Anti-Anchoring (Instantiation of "First Thought Might Be Wrong")
 
 When reviewing bug investigation conclusions or proposed fixes, the
-anti-anchoring discipline applies with additional rigor. This fires
-**during reasoning, before the persona review** — it is part of the
-thinking discipline, not a post-hoc check:
+anti-anchoring discipline from `copilot-instructions.md` applies with
+additional rigor. This fires **during reasoning, before the persona
+review** — it is part of the thinking discipline, not a post-hoc check:
 
 1. Before forming a primary hypothesis, enumerate at least two
    alternative explanations
@@ -243,11 +243,10 @@ actually applied — it is the backstop, not the mechanism.
 - **Analysis only** — the review skill does not modify the artifact itself.
   It produces findings; the calling agent or human makes changes.
 - **Parallel execution** — all personas MUST run in parallel for speed.
-  Sequential execution is unacceptable (impatience pressure leads to
-  skipping reviews entirely).
+  Sequential execution is unacceptable (Finding 9: impatience pressure).
 - **Teaching, not just gating** — every finding MUST include reasoning that
   helps the engineer understand the issue, not just a pass/fail verdict
-  (review as learning mechanism).
+  (Finding 12: review as learning mechanism).
 - **Full panel always** — no threshold or shortcut. Every artifact gets
   the full panel for its type. No exceptions.
 - **Re-review is lighter and capped** — when re-running after changes,
@@ -314,9 +313,11 @@ WHERE id = (SELECT MAX(id) FROM skill_execution_log
 
 - **Upstream**: Any skill that produces an artifact (code, design, writing)
   should invoke persona-review before presenting the artifact to the human.
-- **Concepts**: `ai-assisted-engineering` (principles)
+- **Concepts**: `ai-assisted-engineering` (principles), `fix-scoping`
+  (Correctness Reviewer draws on this), `containment` (Guidelines Compliance
+  checks this)
 - **Technologies**: `persona-review-panels` (panel definitions),
-  `review-voice` (Voice Reviewer reference)
+  `pr-review-voice` (Voice Reviewer reference)
 
 ## Evolution
 

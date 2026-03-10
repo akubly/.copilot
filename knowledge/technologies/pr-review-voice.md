@@ -1,12 +1,18 @@
 # Aaron's Writing Voice Guide
 
-*Derived from studying 2,670 review comments across 481 PRs*
+*Created: 2026-02-23*
+*Sources: 193 review comments across 8 PRs, 19 authored PRs (titles + descriptions), 50 commit messages*
 
 ## Purpose
 
 When writing anything on Aaron's behalf — PR review comments, PR titles,
 PR descriptions, commit messages, or thread replies — match his voice exactly.
 This guide was derived from studying his actual writing across all these surfaces.
+
+**Cross-referenced from:**
+- `knowledge/technologies/pr-creation.md` — PR description composition
+- `create-pull-request/SKILL.md` — PR creation workflow
+- `knowledge/concepts/code-review-patterns.md` — **What Aaron looks for** in reviews (20 actionable rules derived from 2,670 comments across 481 PRs)
 
 ## Core Voice Characteristics
 
@@ -47,28 +53,33 @@ declarations. This is collaborative, not confrontational.
 - `Should we declare this earlier in the method?`
 - `Do we want to parallelize this?`
 - `Is std::erase noexcept?`
-- `Do these tests require the feature enabled?`
+- `Is it even possible to enter DS while NCSI already holds a PDC ref?`
 - `Should this go to the deferred list if we somehow get this call while in austerity mode?`
+- `Do these tests require the feature enabled?`
+- `Does it make sense to just use WCM_MEDIA_TYPE?`
 
 **Understanding-check questions:**
 - `Am I understanding correctly?`
 - `If I'm reading this correctly, it doesn't seem to match the preceding comment?`
+- `Are you referring to the case that neither PDC's requested state NOR the total RPC ref count has changed...?`
 
 **Rhetorical questions (gentle pushback):**
 - `If we don't show the toast, we can't actually failover, though, right?`
+- `The registry function is returning WMC_MEDIA_TYPE values already?`
 - `We shouldn't need this to call the NSP, right?`
 
 ### 3. "Consider" as the Default Suggestion Verb
 
 When suggesting alternatives, Aaron almost always uses "Consider":
 - `Consider tpTimer.swap(m_tpTimer)`
-- `Consider std::chrono::duration_cast`
-- `Consider std::from_chars`
-- `Consider std::condition_variable::wait_for`
+- `Consider wil::filetime::convert_msec_to_100ns`
+- `Consider wil::filetime::from_int64`
+- `Consider wil::event_t::is_signaled`
 - `Consider exchange or compare_exchange_*`
+- `Consider m_reconfirmationTimer_Obsolete and m_reconfirmationTimer.`
 - `Consider default value of std::nullopt`
-- `Consider tracing from the adapter tracking methods`
-- `Consider Feature_Foo::AssertEnabled() in new methods.`
+- `Consider tracing from the TrackWifiAdapter* methods`
+- `Consider Feature_ECMC::AssertEnabled() in new methods.`
 - `Consider leaving a comment as a reminder`
 
 Other suggestion verbs (less common):
@@ -82,10 +93,10 @@ When suggesting an alternative, Aaron frequently writes the code directly:
 ```
 Could be a vector with:
 
-if (std::ranges::count(items, key, &KeyType::Value) != 0)
+if (std::ranges::count(m_wifiAdaptersUp, luid, &NET_LUID::Value) != 0)
 {
-    items.emplace_back(key);
-    m_signal.ResetEvent();
+    m_wifiAdaptersUp.emplace_back(luid);
+    m_wifiDisconnected.ResetEvent();
 }
 ```
 
@@ -94,15 +105,15 @@ Or multiple alternatives:
 This can be auto
 
 or just:
-std::unique_ptr<Handler> handler{...};
+std::unique_ptr<WSPositionHandler> positionInference{...};
 
 or maybe even:
-std::unique_ptr handler{static_cast<Handler*>(pBase)};
+std::unique_ptr positionInference{static_cast<WSPositionHandler*>(pPositionBase)};
 ```
 
 He often acknowledges uncertainty in his own suggestions:
 - `(Not sure if these can be static_cast or need to be reinterpret_cast?)`
-- `(Or std::ranges::count(items, key) if there's an operator== in scope)`
+- `(Or std::ranges::count(m_wifiAdaptersUp, luid) if there's an operator== for NET_LUID in scope)`
 
 ### 5. Labeling
 
@@ -114,8 +125,6 @@ He often acknowledges uncertainty in his own suggestions:
 - `nit: const is meaningless here`
 
 **Non-blocking label:** `(Non-blocking comment...)` for FYI-level observations
-
-**Food for thought:** `(Food for thought — not for this PR)` for blue-sky ideas
 
 **FWIW:** Used for helpful information that doesn't require action:
 - `FWIW: the TraceLogging macros stringize the first argument, if no name is specified.`
@@ -135,7 +144,7 @@ He uses *italics* for emphasis:
 - `we are severely *limiting*...`
 - `I'm just trying very hard to make sure we don't *cripple* this feature`
 - `It might almost be *more* expressive if...`
-- `*super crisp* about how [the component] is going to behave`
+- `*super crisp* about how firewall is going to behave`
 - `*triple check*`
 
 ### 7. Persistent but Respectful Pushback
@@ -155,7 +164,7 @@ and then explains the scenario he's worried about.
 Recurring theme: tracing, telemetry, and debuggability
 - `Tracing in this area is *critical* for bug investigations.`
 - `Do we need to emit any special tracing or telemetry indicating failover has ended?`
-- `Consider tracing from the adapter tracking methods`
+- `Consider tracing from the TrackWifiAdapter* methods`
 - `Should this telemetry assert that we're not invalidating...?`
 
 ### 9. Containment Awareness
@@ -172,7 +181,7 @@ Always checks that new features are properly contained:
 
 When a question goes beyond code review into product design:
 - `@PM, what do you think?`
-- `@PM do we want general purpose traffic possibly routed over fallback when the primary link is available?`
+- `@PM do we want general purpose traffic possibly routed to Cellular when Ethernet is available?`
 - `I think this is a spec question @PM`
 
 ### 11. Vote Patterns
@@ -218,10 +227,10 @@ as action items, leading to rabbit hole investigations on aspirational ideas.
 2. **Design alternatives get labeled.** When you write code showing how something
    *could* be done differently, always label it — even if the idea is great.
 3. **Questions about correctness are unlabeled.** "This introduced tearing" or
-   "Both states could be true simultaneously — I don't think we want that"
+   "Both AdapterUp AND AdapterDown could be true — I don't think we want that"
    are blocking concerns and should NOT be labeled.
 4. **Curiosity questions get labeled.** "I wonder why they don't also generate
-   the disabled variant" → add `(Non-blocking)`.
+   AssertDisabled" → add `(Non-blocking)`.
 
 ### Before and After
 
@@ -229,7 +238,7 @@ as action items, leading to rabbit hole investigations on aspirational ideas.
 ```
 template <typename TimerType>
 ...
-using ResettableTimer = ResettableTimer_Impl<std::unique_ptr<TimerHandle>>;
+using CLocationResettableTimer = CLocationResettableTimer_Impl<wil::unique_threadpool_timer_nowait>;
 ```
 
 **After (clear expectations):**
@@ -238,24 +247,23 @@ using ResettableTimer = ResettableTimer_Impl<std::unique_ptr<TimerHandle>>;
 
 template <typename TimerType>
 ...
-using ResettableTimer = ResettableTimer_Impl<std::unique_ptr<TimerHandle>>;
+using CLocationResettableTimer = CLocationResettableTimer_Impl<wil::unique_threadpool_timer_nowait>;
 ```
 
 **Before (ambiguous — is this an ask?):**
 ```
-This is important for the feature. Is this combination of features a supported scenario?
-If so, we should be *super crisp* about how the component is going to behave for
-the edge cases here.
+This is important for CTA. Is CTA+ECMC a supported scenario? If so, we should
+be *super crisp* about how firewall is going to behave for the edge cases here.
 ```
 
 **After (clear expectations):**
 ```
-(Non-blocking) Is this combination of features a supported scenario? If so, we should
-be *super crisp* about how the component is going to behave for the edge cases here.
-Might be worth a follow-up work item.
+(Non-blocking) Is CTA+ECMC a supported scenario? If so, we should be *super crisp*
+about how firewall is going to behave for the edge cases here. Might be worth a
+follow-up work item.
 ```
 
-## Comment Templates by Type
+## Comment Template by Type
 
 ### Nit
 ```
@@ -326,30 +334,33 @@ Aaron's PR titles are concise, action-oriented, and technically precise.
 - Start with `Fix` — no prefix, no ticket type, no brackets
 - Name the specific technical issue, not the symptom
 - Examples:
-  - `Fix TOCTOU race in teardown`
-  - `Fix use-after-free in active probe worker`
-  - `Fix race between stabilization and identification`
-  - `Fix Watson crash in TraceLogging due to string view lifetime issue`
+  - `Fix TOCTOU race in PublicNetworkListManager teardown`
+  - `Fix use-after-free in NCSI active probe worker`
+  - `Fix race between DHCP stabilization and network identification`
+  - `Fix Watson crash in DNS suffix TraceLogging due to string view lifetime issue`
+
+**Bug reference (when relevant):**
+- `Fix ADO bug #58509471: Move interface speed comparison to polling phase`
 
 **Feature enablement:**
-- `Enable Feature_Fix_DestinationCallbackDrainRace by default`
-- `Promote Feature_Fix_WebResponsePointerLifetime to EnabledByDefault`
+- `Enable Feature_NLM_Fix_DestinationCallbackDrainRace by default`
+- `Promote Feature_NCSI_Fix_WebResponsePointerLifetime to EnabledByDefault`
 
 **Improvements/features:**
-- `Improve Scenario-Based Disconnected Standby Activation Granularity`
-- `Implement NetworkMaintenance scenario`
+- `Improve WCM Scenario-Based Disconnected Standby PDC Activation Granularity`
+- `Implement DS2025 NetworkMaintenance scenario`
 - `Reduce frequency of noisy route refresh event`
 
 **Quick fixes:**
 - `Fix bad merge`
-- `Fix feature flag ID`
+- `Fix velocity feature ID`
 - `Post-merge build fixes`
 
 ### Anti-patterns (do NOT use)
 - ❌ `[BUG]` or `feat:` prefixes
 - ❌ ALL CAPS
 - ❌ Ticket-number-first: `AB#12345: Fix the thing`
-- ❌ Vague: `Various fixes`, `Updates to component`
+- ❌ Vague: `Various fixes`, `Updates to NLM`
 
 ---
 
@@ -363,10 +374,10 @@ State the problem technically and precisely, but use natural language — not
 corporate-speak.
 
 **Good examples:**
-- `Construction could throw (e.g., std::map allocation) and leak exceptions across in-proc COM boundaries.`
-- `CoUninitialize was invoked while holding the lock, which could blow up if CoUninitialize led to COM cleanup and deleted the lock.`
+- `INetworkListManager construction could throw (e.g., std::map allocation) and leak exceptions across in-proc COM boundaries.`
+- `CoUninitialize was invoked while holding the m_csPrivNetworkListManager lock, which could blow up if CoUninitialize led to COM cleanup and deleted the lock.`
 - `Our telemetry event was flagged as noisy on ~5% of devices.`
-- `Crash dumps show a service state change callback crashing when accessing members of a partially destructed instance. Code inspection reveals that the class's FinalRelease *can actually re-subscribe* to notifications, which leads to the crash.`
+- `Crash dumps show a service state change callback crashing when accessing members of a partially destructed instance. Code inspection reveals that the class's FinalRelease *can actually re-subscribe* to SCM notifications, which leads to the crash.`
 
 **Characteristics:**
 - Names specific types, functions, and variables
@@ -379,11 +390,11 @@ Concise bullets or sentences. Name specific functions and patterns.
 
 **Good examples:**
 - `Added a custom ATL class factory to translate bad_alloc/unknown exceptions into HRESULTs.`
-- `Changed lambda capture from [suffix] to [capturedSuffix = std::wstring{suffix}]`
-- `Replaced single shared activation with N:N model where each operation can create its own activation with specific parameters`
+- `Changed lambda capture from [dnsSuffix] to [capturedDnsSuffix = std::wstring{dnsSuffix}]`
+- `Replaced single shared activation with N:N model where each network operation can create its own PDC activation with specific parameters`
 
 **Characteristics:**
-- References feature flag IDs when relevant
+- References feature flag IDs: `Added Feature_NLM_Fix_IncorrectConnectivityLevel (ID: 59811950)`
 - Code-level detail: actual variable names, actual function names
 - 2-5 bullets or sentences — not more
 
@@ -391,7 +402,7 @@ Concise bullets or sentences. Name specific functions and patterns.
 Honest about what was and wasn't tested.
 
 **Terse when appropriate:**
-- `Precheckin passed.`
+- `NLM precheckin`
 - `Code changes build.`
 
 **Detailed when notable:**
@@ -399,19 +410,39 @@ Honest about what was and wasn't tested.
 - `With old bits, test crashed on 1/3 loop runs. On new bits, test passes 1/100 loop runs.`
 
 **Refreshingly honest:**
-- `Considered introducing unit tests but the outcome of the change is not readily testable as the provider is fully inlined in a header file.`
+- `Considered introducing wcmtcpip unit tests but the outcome of the change is not readily testable as our triage provider is fully inlined in a header file.`
 
 ---
 
 ## Commit Messages
 
 ### Topic branch commits (authored directly)
-- Component prefix when touching specific area: `component: Add comprehensive Phase 3 unit tests`
-- Descriptive but brief, no type prefix: `Add characterization tests for the plugin`
-- Phase labels for multi-commit work: `Phase 5: Replace function-pointer seam with shared stubs`
+- Component prefix when touching specific area: `nlawplg: Add comprehensive Phase 3 unit tests`
+- Descriptive but brief, no type prefix: `Add characterization tests for WLAN NLA Plugin (nlawplg)`
+- Phase labels for multi-commit work: `Phase 5: Replace function-pointer seam with WITL shared stubs`
 - PR feedback: `Address PR review feedback: containment, style, readability`
 
 ### Quick-fix commits
 - `Fix bad merge`
-- `Fix feature flag ID`
-- `Conflict resolutions`
+- `Fix velocity feature ID`
+- `Conflict resolutions for !NNNNN`
+
+---
+
+## Per-Author Trend Analysis (2026-02-23)
+
+*Source: 193 comments across 8 PRs*
+
+| Author | Comments | Avg Len | Rejections | Observed Pattern |
+|--------|----------|---------|------------|------------------|
+| Keith Horton | 48 | 83 | 1× | Peer mode. Terse exchanges. Most nits. Quick accept/reject cycles. |
+| Koushik Saha | 37 | 87 | 2× | Detailed feedback. Full code redesigns. 7 vote changes to approve. |
+| Ajith Kannath | 38 | 98 | 3× | Deep design. Most questions (12). @PM mentions for spec questions. |
+| Trish Lam | 4 | 292 | 0 | Extended dialogue. Few but long comments. Design conversations. |
+| Eric Gao | 25 | 58–98 | 2× | Adjusts by PR topic. Terse on tests, substantive on design. |
+| Nicole Odell | 6 | 96 | 0 | Most restrained. Best scope labeling. "(Non-blocking)" deployed well. |
+| CJ Lee | 5 | 112 | 0 | Straightforward. Questions only, no nits. |
+
+**Key insight**: Comment *quality* is consistent across all authors, but *scope labeling*
+is inconsistent — aspirational ideas are labeled for some authors but not others.
+The Scope Labeling section above addresses this.

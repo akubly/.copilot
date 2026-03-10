@@ -1,0 +1,24 @@
+# Private / machine-specific
+personal/
+config.json
+session-state/
+session-store.db
+session-store.db-shm
+session-store.db-wal
+.playwright-cli/
+command-history-state.json
+mcp-config.json
+mcp-oauth-config/
+mcp-servers/
+logs/
+marketplace-cache/
+installed-plugins/
+es-metadata.yml
+owners.txt
+permissions-config.json
+ide/
+connect/
+restart/
+pkg/
+plugins/
+scripts/

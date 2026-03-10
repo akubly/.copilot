@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionEnd": [
+      {
+        "type": "command",
+        "bash": "hooks/governance-audit/audit.sh",
+        "powershell": "hooks/governance-audit/audit.ps1",
+        "cwd": ".",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}

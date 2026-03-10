@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "type": "command",
+        "powershell": "hooks/post-tool-tracking/track.ps1",
+        "cwd": ".",
+        "timeoutSec": 5,
+        "comment": "Logs file modifications and tool execution stats to sidecar files"
+      }
+    ]
+  }
+}

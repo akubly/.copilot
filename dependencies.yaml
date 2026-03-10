@@ -1,0 +1,66 @@
+# Dependencies for the Copilot skill corpus
+# This file documents ALL external dependencies needed by skills
+
+runtime:
+  node:
+    version: ">=18.0.0"
+    install: "https://nodejs.org/"
+    required_by: [build-mcp-server, playwright-cli]
+  python:
+    version: ">=3.10"
+    install: "https://python.org/"
+    required_by: [investigate-telemetry-asserts]
+  git:
+    required_by: [identify-topic-branch-changes, create-pull-request]
+
+environment:
+  razzle:
+    description: "Windows OS build environment"
+    check: "$env:SDXROOT is set"
+    required_by: "Most build/test/deploy skills"
+  tshell:
+    description: "Remote PowerShell to Windows VMs"
+    check: "$device variable exists"
+    required_by: "All VM-interacting skills"
+  nebula:
+    description: "VM provisioning service"
+    check: "TDP cmdlets available"
+    required_by: [create-nebula-test-vm, resolve-build]
+
+mcp_servers:
+  universal:
+    - name: ado
+      package: "@azure-devops/mcp@latest"
+      transport: npx
+    - name: memory
+      package: "@modelcontextprotocol/server-memory"
+      transport: npx
+    - name: sequential-thinking
+      package: "@modelcontextprotocol/server-sequential-thinking"
+      transport: npx
+    - name: azure-mcp-server
+      package: "@azure/mcp@latest"
+      transport: npx
+    - name: ms-fabric-rti
+      package: "microsoft-fabric-rti-mcp"
+      transport: uvx
+  windows_specific:
+    - name: DataLayer
+      install: "Internal tool share"
+      portable: false
+    - name: IntelligentTesting
+      install: "Internal Heimdall tooling"
+      portable: false
+    - name: DebugAnalysis
+      install: "Internal diagnostics tooling"
+      portable: false
+
+powershell_modules:
+  - name: VstsRestApiHelpers
+    source: "IxpTools or $env:SDXROOT/src/utilities/PowerShell/Modules/"
+    required_by: "Code search, PR management"
+
+plugins:
+  - name: workiq
+    marketplace: copilot-plugins
+    required_by: "Workplace intelligence queries"

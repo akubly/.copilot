@@ -1,137 +1,133 @@
 # Concept: AI-Assisted Engineering
 
+Principles for responsible AI use in Windows OS development, internalized from
+MobCon's AI Guidelines and refined through real working experience.
+
 ## Core Principle
 
-**AI assists; humans own.** AI is a productivity multiplier and design reviewer — not a decision-maker. The human engineer remains fully accountable for correctness, security, and auditability.
-
-AI-generated output must be treated as a *draft from a knowledgeable but fallible colleague* — useful, often excellent, but never authoritative on its own.
-
----
+**AI assists; humans own.** AI is a productivity multiplier and design
+reviewer — not a decision-maker. The human engineer remains fully accountable
+for correctness, security, and auditability of all outputs, regardless of
+how much AI contributed to producing them.
 
 ## The Trust Spectrum
 
-Not all tasks carry equal risk when delegated to AI. Calibrate autonomy based on consequence severity and verifiability.
+Not all AI-assisted work carries equal risk. Our working history reveals a
+clear calibration of where AI earns autonomy vs. where it needs oversight:
 
 ### Higher autonomy (AI does well independently)
-
-| Task | Why it works |
-|------|-------------|
-| Codebase exploration and search | Bounded scope, verifiable results |
-| Boilerplate and scaffolding | Pattern-driven, low ambiguity |
-| Systematic processing (categorization, formatting, style enforcement) | Rule-based, deterministic intent |
-| Build and test execution | Observable outcomes, pass/fail signals |
-| Knowledge retrieval | Factual lookup, cross-referenceable |
+- **Codebase exploration and search** — tracing call graphs, finding
+  implementations, understanding unfamiliar components
+- **Boilerplate and scaffolding** — containment patterns, test stubs,
+  build file structure, RAII wrappers
+- **Systematic processing** — de-duplication, categorization, formatting,
+  style enforcement, naming convention checks
+- **Build and test execution** — running builds, collecting results,
+  parsing test output
+- **Knowledge retrieval** — querying Kusto, searching ADO, looking up
+  documentation
 
 ### Lower autonomy (AI needs human steering at decision points)
-
-| Task | Why human judgment is needed |
-|------|------------------------------|
-| **Scope decisions** | AI's first instinct is often too broad — it optimizes for completeness over precision |
-| **Design tradeoffs** | Requires understanding ecosystem fit, maintenance cost, and team conventions |
-| **Hidden cost analysis** | Solutions that "look free" may carry maintenance burden, tooling fragility, or coupling risk |
-| **Execution ordering** | What to do FIRST matters — AI tends to flatten priorities into parallel lists |
-| **Ecosystem fit** | Matching tooling, libraries, and patterns to infrastructure conventions |
+- **Scope decisions** — what to fix AND what NOT to fix. AI's first instinct
+  is often too broad (fix-scoping: "first thought might be wrong")
+- **Design tradeoffs** — choosing between approaches requires understanding
+  ecosystem fit, maintenance cost, and team conventions (WITL: 4 designs
+  killed by review before reaching the right one)
+- **Hidden cost analysis** — solutions that "look free" may carry maintenance
+  burden or fragile dependencies (__imp_ anti-pattern)
+- **Execution ordering** — what to do FIRST matters; AI may optimize the
+  wrong thing (PCH boundary before include graph)
+- **Ecosystem fit** — matching tooling to infrastructure conventions rather
+  than reaching for the "modern" general-purpose tool (gvfs vs scalar)
 
 ### Critical human verification required
-
-| Risk | Description |
-|------|-------------|
-| **Sub-agent output scope** | AI may apply instructions too broadly, changing more than intended |
-| **Confidence without evidence** | AI produces plausible, internally consistent, completely wrong results with high fluency |
-| **Correctness, performance, and security claims** | AI cannot prove its own output correct — verification must be external |
-
----
+- **Sub-agent output scope** — AI interprets instructions correctly but
+  may apply them too broadly (41-feature removal: verify diff before commit)
+- **Confidence without evidence** — AI produces plausible, internally
+  consistent, completely wrong results with no error signal (3 PDBs,
+  3 answers: verify with independent evidence)
+- **Correctness, performance, and security claims** — any assertion about
+  these properties requires explicit validation and documentation
 
 ## Per-Phase Guidelines
 
 ### Specifications and Design
-
-- **AI excels at:** Outlines, alternatives enumeration, tradeoff analysis, failure mode brainstorming, checklist generation
-- **Before review:** Validate all AI-generated claims with references; explore alternatives the AI didn't suggest; question assumptions
-- **Key risk:** AI may present plausible claims without factual basis — it generates *plausible reasoning*, not *verified reasoning*
+- AI excels at: outlines, alternatives, tradeoff analysis, failure mode
+  brainstorming, clarity improvements, diagram generation
+- Before review: validate all AI-generated claims with references; explore
+  alternatives; understand pros/cons
+- Key risk: AI may present plausible-sounding claims without factual basis
 
 ### Code and Tests
-
-- **AI excels at:** Exploration, boilerplate, test generation, code-from-spec proposals, refactoring within well-defined constraints
-- **Before commit:** Review the full implementation (not just the diff summary), run tests, validate security and performance implications, check edge cases
-- **Key risk:** AI output needs structured verification, not just "looks right" — fluent code is not necessarily correct code
+- AI excels at: exploration, boilerplate, containment, test generation,
+  code-from-spec proposals, useful comments
+- Before PR: review full implementation, unit/functional/regression testing,
+  validate logging/telemetry, understand security/performance implications
+- Key risk: "triple check" is not enough — need structured verification
+  (adversarial review, diff verification, scope analysis)
 
 ### Bug Investigation
-
-- **AI excels at:** Hypothesis generation, log analysis, pattern matching against known failure modes, bisection strategy
-- **Before acting:** Challenge and validate every recommendation through testing; confirm the hypothesis before implementing the fix
-- **Key risk:** AI may solve the wrong problem (treating symptoms instead of root cause) or propose a fix with unintended side effects that only manifest under specific conditions
-
----
+- AI can assist in investigation, but recommendations cannot be taken at
+  face value
+- Challenge and validate through testing
+- Key risk: AI may solve the wrong problem or propose a fix with unintended
+  side effects
 
 ## Structural Safeguards
 
-Two mandatory gates protect against AI over-trust:
+Two mandatory gates encode these principles into every workflow:
 
 ### 1. Decision-Point Gate
+Before making any choice between alternatives — implementation approach,
+architecture decision, naming, API shape, etc. — STOP and present the
+options to the human engineer. Include:
+- What the options are
+- Tradeoffs of each
+- Which the agent leans toward and why
+- Wait for human input before proceeding
 
-Before making consequential choices, AI must **present options** rather than act unilaterally:
-
-- What are the alternatives?
-- What are the tradeoffs of each?
-- What information is missing?
-- What is the recommended option, and why?
-
-The human selects. The AI executes.
+This applies even to choices that seem obvious. The purpose is auditability
+and shared understanding, not just catching errors.
 
 ### 2. Pre-Output Persona Review Gate
-
-Before presenting any significant output (code changes, design proposals, investigation conclusions), apply a structured review:
-
-- **Skeptic perspective:** What could be wrong? What assumptions are unvalidated?
-- **Scope perspective:** Is this changing more than necessary? Are there side effects?
-- **Ecosystem perspective:** Does this fit the project's conventions, tooling, and maintenance expectations?
-
-This review should be systematic, not perfunctory. The goal is to catch the class of errors that fluent output obscures.
-
----
+Before presenting ANY work output — code, commit messages, PR descriptions,
+review comments, designs, documents — invoke a structured persona review.
+Each persona evaluates the output from a specific angle. Results are
+discussed item by item with the human engineer. Nothing leaves the machine
+until the human approves.
 
 ## Anti-Patterns
 
 ### "It looks right" ≠ "It is right"
-
-AI outputs are fluent, well-formatted, and internally consistent. This makes them **harder** to review critically than poorly written human output. The polish creates a false signal of correctness.
-
-**Counter:** Use structured review mechanisms. Read for logic, not for prose quality. Test behavior, not appearance. When reviewing AI output, actively look for what's *missing* rather than evaluating what's *present*.
+AI outputs are fluent, well-formatted, and internally consistent. This
+makes them HARDER to review critically, not easier. Automation bias —
+unconsciously lowering scrutiny on professional-looking output — is a
+real risk. Counter with structured review mechanisms, not just "be careful."
 
 ### "AI said it, so it must be validated"
-
-The mere fact that AI generated something does not constitute validation. AI can produce confident explanations for incorrect conclusions. It can cite patterns that don't apply. It can generate tests that pass but don't test what they claim to test.
-
-**Counter:** Independently verify through testing, reference checks, and domain expertise. Treat AI output as a hypothesis, not a conclusion.
+The mere fact that AI generated something does not constitute validation.
+The human must independently verify claims through testing, reference
+checks, and domain expertise. If you can't explain WHY the AI's output
+is correct, you haven't validated it.
 
 ### "Zero product code changes" ≠ "Zero cost"
+Solutions that avoid touching production code may carry hidden costs:
+reliance on implementation details, tooling fragility, or ecosystem
+mismatch. Evaluate maintenance burden, not just immediate elegance.
 
-Solutions that avoid production code changes may appear lower-risk, but they can carry hidden costs:
+## Related Concepts
+- **fix-scoping** — "first thought might be wrong" discipline
+- **containment** — partitioning AI-assisted changes behind feature toggles
+- **characterization-testing** — pinning behavior before modifying it
+- **root-cause-analysis** — structured investigation (AI traces, human validates)
 
-- **Reliance on implementation details** — tests or tooling that depend on internal behavior break when internals change
-- **Tooling fragility** — custom scripts and workarounds accumulate maintenance burden
-- **Ecosystem mismatch** — solutions that work around established patterns rather than working within them create confusion and inconsistency
+## Related Technologies
+- **persona-review-panels** — work-type-specific review persona definitions
+- **pr-review-voice** — encoding human voice standards for AI-authored text
 
-**Counter:** Evaluate total cost of ownership, not just immediate risk. Sometimes the "bigger" change is actually the cheaper one long-term.
+## Related Skills
+- **persona-review** — invocable workflow implementing the review gate
 
----
-
-## Summary
-
-| Principle | Practice |
-|-----------|----------|
-| AI assists; humans own | Engineer is accountable for all output |
-| Calibrate autonomy to risk | High autonomy for exploration; human gates for decisions |
-| Verify, don't trust | Structured review before every consequential output |
-| Challenge scope | AI's first answer is often too broad — narrow deliberately |
-| Test behavior, not appearance | Fluent output obscures errors — test the actual behavior |
-| Evaluate total cost | "Zero code changes" may still carry hidden costs |
-
----
-
-## Related
-
-- **Concepts:** fix-scoping, containment, characterization-testing, root-cause-analysis
-- **Technologies:** persona-review-panels, pr-review-voice
-- **Skills:** persona-review
+## Origin
+- MobCon AIGuidelines document (Jean Khawand, Sathya Karivaradaswamy)
+- Refined through working experience 2026-02-19 through 2026-03-08
