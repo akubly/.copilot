@@ -77,8 +77,8 @@ artifact and every decision.
 
 **Deliverable artifacts include:** code changes, designs, plans, documents,
 commit messages, PR content, review comments. **Not deliverable:** exploratory
-analysis, answering questions, intermediate work products, conversational
-interaction, status updates.
+analysis, answering questions, intermediate work products, persona review
+findings, conversational interaction, status updates.
 
 ### Decision-Point Gate
 
