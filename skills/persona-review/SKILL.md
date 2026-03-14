@@ -13,7 +13,19 @@ Use this skill when:
 - About to present any document or written artifact
 - Explicitly asked to review an artifact
 
-**This skill is MANDATORY before any work output leaves the machine.**
+Do NOT use this skill on:
+- Persona review findings, dispositions, or summaries (recursion guard)
+- Exploratory analysis, status updates, or conversational responses
+- Intermediate work products that are not final deliverables
+
+**This skill is MANDATORY before any deliverable artifact leaves the machine.**
+
+### Recursion Guard
+
+Persona review findings are **not deliverable artifacts** — they are
+intermediate work products. This skill MUST NOT invoke itself on its own
+output. The outputs of this skill (findings, dispositions, summaries) flow
+directly to the human without a review pass.
 
 ## Goal
 
@@ -247,8 +259,10 @@ actually applied — it is the backstop, not the mechanism.
 - **Teaching, not just gating** — every finding MUST include reasoning that
   helps the engineer understand the issue, not just a pass/fail verdict
   (Finding 12: review as learning mechanism).
-- **Full panel always** — no threshold or shortcut. Every artifact gets
-  the full panel for its type. No exceptions.
+- **Full panel for substantive artifacts** — every substantive deliverable
+  gets the full panel for its type. Trivial changes (typos, single-line fixes,
+  simple renames) use lightweight self-review per the proportionality clause
+  in `copilot-instructions.md`.
 - **Re-review is lighter and capped** — when re-running after changes,
   personas focus on whether accepted findings were addressed, not a full
   fresh review. Re-review runs at most once. If the second review produces
@@ -311,8 +325,9 @@ WHERE id = (SELECT MAX(id) FROM skill_execution_log
 
 ## Related Skills
 
-- **Upstream**: Any skill that produces an artifact (code, design, writing)
-  should invoke persona-review before presenting the artifact to the human.
+- **Upstream**: Any skill that produces a deliverable artifact (code, design,
+  writing) should invoke persona-review before presenting it to the human.
+  Persona-review itself is exempt — its outputs are intermediate, not deliverable.
 - **Concepts**: `ai-assisted-engineering` (principles), `fix-scoping`
   (Correctness Reviewer draws on this), `containment` (Guidelines Compliance
   checks this)

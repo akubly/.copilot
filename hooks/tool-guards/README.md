@@ -31,6 +31,13 @@ branches and must have explicit user approval.
 When denied, the agent receives a message instructing it to present the
 exact command to the user and wait for confirmation.
 
+**Approval token flow:** After the user approves, the agent writes a
+one-time approval token to `$env:TEMP\copilot-git-approval.json` with
+a timestamp, then retries the command. The hook validates the token is
+recent (≤120 seconds), consumes it (deletes the file), and allows the
+operation. Each token is single-use — chained commands (e.g.,
+`git commit && git push`) count as one tool call and one token.
+
 ### Guard 2: VFS Hydration Safety
 
 In VFS-for-Git repositories (e.g., os.2020), blocks broad file traversals

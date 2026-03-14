@@ -61,14 +61,32 @@ if ($command -match '\bgit\b') {
         '\bgit\s+clean\s+-\w*[fd]'   # git clean -fd (file deletion)
     )
 
+    $matched = $false
     foreach ($pat in $gitBlocked) {
-        if ($command -match $pat) {
-            @{
-                permissionDecision       = 'deny'
-                permissionDecisionReason = "Blocked: git operation requires explicit user approval. Present the exact command to Aaron and wait for confirmation before retrying."
-            } | ConvertTo-Json -Compress
-            exit 0
+        if ($command -match $pat) { $matched = $true; break }
+    }
+
+    if ($matched) {
+        # Check for a one-time approval token (written after user confirms)
+        $approvalFile = Join-Path $env:TEMP 'copilot-git-approval.json'
+        if (Test-Path $approvalFile) {
+            try {
+                $approval = Get-Content $approvalFile -Raw | ConvertFrom-Json
+                $age = (Get-Date) - [datetime]::Parse($approval.timestamp)
+                if ($age.TotalSeconds -le 120) {
+                    Remove-Item $approvalFile -Force
+                    exit 0  # Valid approval — allow the operation
+                }
+            } catch { }
+            Remove-Item $approvalFile -Force -ErrorAction SilentlyContinue
         }
+
+        # No valid approval — deny
+        @{
+            permissionDecision       = 'deny'
+            permissionDecisionReason = "Blocked: git operation requires explicit user approval. Present the exact command to Aaron and wait for confirmation before retrying."
+        } | ConvertTo-Json -Compress
+        exit 0
     }
 }
 
